@@ -1,6 +1,8 @@
 .{
-    .name = "chameleon",
-    .version = "2.0.0",
+    .name = .chameleon,
+    .version = "3.0.0",
+    .minimum_zig_version = "0.14.0",
+    .fingerprint = 0x3f13cb6e09e7a76e,
     .paths = .{
         "src/api/",
         "src/chameleon.zig",
