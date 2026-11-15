@@ -21,6 +21,8 @@
 
 ## Installation
 
+> Chameleon supports only zig **master** branch.
+
 - Install the package.
 
   ```bash
@@ -31,7 +33,7 @@
 
   ```zig
   const cham = b.dependency("chameleon", .{});
-  exe.root_module.addImport("chameleon", cham.module("chameleon"));
+  exe_mod.addImport("chameleon", cham.module("chameleon"));
   ```
 
 - Import it in your project.
