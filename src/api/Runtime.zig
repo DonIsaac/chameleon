@@ -44,12 +44,12 @@ pub fn printFileBuffered(self: *Chameleon, io: std.Io, file: std.Io.File, compti
 
 /// Print the formatted text to buffered stdout.
 pub fn printOutBuffered(self: *Chameleon, io: std.Io, comptime format: []const u8, args: anytype) !void {
-    return self.printFile(io, .stdout(), format, args);
+    return self.printFileBuffered(io, .stdout(), format, args);
 }
 
 /// Print the formatted text to buffered stderr.
 pub fn printErrBuffered(self: *Chameleon, io: std.Io, comptime format: []const u8, args: anytype) !void {
-    return self.printFile(io, .stderr(), format, args);
+    return self.printFileBuffered(io, .stderr(), format, args);
 }
 
 /// Print the formatted text to a `File` writer.
