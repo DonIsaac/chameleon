@@ -66,9 +66,7 @@ Check out the full documentation [here](https://github.com/tr1ckydev/chameleon/b
 > According to [no-color.org](https://no-color.org/), *"Command-line software which adds ANSI color to its output by default should check for a `NO_COLOR` environment variable that, when present and not an empty string (regardless of its value), prevents the addition of ANSI color."*
 >
 
-Chameleon supports this standard only in it's **Runtime API** by detecting the presence of the *NO_COLOR* environment variable (regardless of it's value), if present disables any ANSI colors or styles, and can also be configured to not do so if you want to implement a different way of detection, although highly not recommended.
-
-To enable detection, pass the process environment when initializing the runtime API, e.g. `Chameleon.initRuntime(.{ .allocator = init.gpa, .environ = init.minimal.environ })`.
+Chameleon supports this standard only in it's **Runtime API** by detecting the presence of the *NO_COLOR* environment variable (with a non-empty value), if present disables any ANSI colors or styles, and can also be configured to not do so if you want to implement a different way of detection, although highly not recommended.
 
 
 

@@ -9,9 +9,8 @@ const std = @import("std");
 const Chameleon = @import("chameleon");
 
 pub fn main(init: std.process.Init) !void {
-	const io = init.io;
 	comptime var c = Chameleon.initComptime();
-	try c.green().bold().printOut(io, "Hello, world!", .{});
+	try c.green().bold().printOut(init.io, "Hello, world!", .{});
 }
 ```
 
@@ -26,27 +25,19 @@ const std = @import("std");
 const Chameleon = @import("chameleon");
 
 pub fn main(init: std.process.Init) !void {
-  const io = init.io;
-  var c = Chameleon.initRuntime(.{
-    .allocator = init.gpa,
-    .environ = init.minimal.environ,
-  });
+  var c = Chameleon.initRuntime(.{ .allocator = init.gpa, .environ = init.minimal.environ });
   defer c.deinit();
-  try c.green().bold().printOut(io, "Hello, world!", .{});
+  try c.green().bold().printOut(init.io, "Hello, world!", .{});
 }
 ```
 
-The biggest advantage of using the runtime API over the comptime one is that, it supports `NO_COLOR` environment variable standard which if present, dynamically prevents colors from being added to the output.
-
-Since Zig 0.17 no longer exposes the process environment globally, `NO_COLOR` is only detected when you pass the environment through the `environ` option (as shown above). If `environ` is omitted, colors are always emitted.
+The biggest advantage of using the runtime API over the comptime one is that, it supports `NO_COLOR` environment variable standard which if present and non-empty, dynamically prevents colors from being added to the output.
 
 
 
 # Styles API
 
 Apart from the initialization syntax, the colors and style syntax are almost similar in both the APIs.
-
-All `print*` functions that write to a file, stdout or stderr take a `std.Io` instance as their first argument (`io` in the examples below, e.g. `init.io` from `main`).
 
 - ### `fmt`
 
@@ -145,7 +136,7 @@ All `print*` functions that write to a file, stdout or stderr take a `std.Io` in
   ```zig
   try c.hex("#FFAA00").printOut(io, "Orangish color!", .{});
   // Using hex triplet:
-  // try c.hex("FA0").printOut(io, ...)
+  // try c.hex("FA0").printOut(...)
   ```
 
 - ### `bgHex` (Custom background color)
@@ -157,7 +148,7 @@ All `print*` functions that write to a file, stdout or stderr take a `std.Io` in
   ```zig
   try c.bgHex("#FFAA00").printOut(io, "Orangish background color!", .{});
   // Using hex triplet:
-  // try c.bgHex("FA0").printOut(io, ...)
+  // try c.bgHex("FA0").printOut(...)
   ```
   
 - ### `createPreset`

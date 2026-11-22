@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 pub const ComptimeChameleon = @import("api/Comptime.zig");
 pub const RuntimeChameleon = @import("api/Runtime.zig");
 pub const HexColors = @import("colors.zig");
@@ -12,16 +13,26 @@ const Config = struct {
     detect_no_color: bool = true,
     /// Process environment used to detect `NO_COLOR`. Zig 0.17 no longer
     /// exposes the environment globally, so pass `init.minimal.environ` from
-    /// `main`. When `null`, `NO_COLOR` is not detected.
-    environ: ?std.process.Environ = null,
+    /// `main`. Pass `.empty` to skip detection.
+    environ: std.process.Environ,
 };
 
 pub fn initRuntime(config: Config) RuntimeChameleon {
     return .{
         .allocator = config.allocator,
-        .no_color = config.detect_no_color and
-            if (config.environ) |env| env.containsConstant("NO_COLOR") else false,
+        .no_color = config.detect_no_color and detectNoColor(config.environ, config.allocator),
     };
+}
+
+/// Returns `true` when `NO_COLOR` is set to a non-empty value.
+fn detectNoColor(environ: std.process.Environ, allocator: std.mem.Allocator) bool {
+    // WASI without libc has no environment block to read in place, so the
+    // environment must be copied into an allocated map. If that fails, fall
+    // back to emitting colors rather than making initialization fallible.
+    if (builtin.os.tag == .wasi and !builtin.link_libc) {
+        return environ.containsUnempty(allocator, "NO_COLOR") catch false;
+    }
+    return environ.containsUnemptyConstant("NO_COLOR");
 }
 
 test {
@@ -39,7 +50,7 @@ test "Runtime file print helpers" {
     var tmp = std.testing.tmpDir(.{});
     defer tmp.cleanup();
 
-    var c = initRuntime(.{ .allocator = std.testing.allocator });
+    var c = initRuntime(.{ .allocator = std.testing.allocator, .environ = .empty });
     defer c.deinit();
 
     {
@@ -95,10 +106,12 @@ test "initRuntime detects NO_COLOR from environ" {
     if (std.process.Environ.Block != std.process.Environ.PosixBlock) return error.SkipZigTest;
     const with: std.process.Environ = .{ .block = .{ .slice = &.{ "FOO=bar", "NO_COLOR=1" } } };
     const without: std.process.Environ = .{ .block = .{ .slice = &.{"FOO=bar"} } };
+    const empty_value: std.process.Environ = .{ .block = .{ .slice = &.{"NO_COLOR="} } };
     const a = std.testing.allocator;
 
     try std.testing.expect(initRuntime(.{ .allocator = a, .environ = with }).no_color);
     try std.testing.expect(!initRuntime(.{ .allocator = a, .environ = without }).no_color);
     try std.testing.expect(!initRuntime(.{ .allocator = a, .environ = with, .detect_no_color = false }).no_color);
-    try std.testing.expect(!initRuntime(.{ .allocator = a }).no_color);
+    try std.testing.expect(!initRuntime(.{ .allocator = a, .environ = empty_value }).no_color);
+    try std.testing.expect(!initRuntime(.{ .allocator = a, .environ = .empty }).no_color);
 }
